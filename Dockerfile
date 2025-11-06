@@ -1,5 +1,4 @@
 FROM caddy:builder-alpine AS builder
-ENV GOPROXY=direct
 RUN xcaddy build \
     --with github.com/caddy-dns/cloudflare
 

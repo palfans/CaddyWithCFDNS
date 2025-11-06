@@ -43,6 +43,25 @@ mkdir -p release
 
 echo "Starting image build..."
 
+# Setup proxy build args if proxy environment variables are set
+PROXY_ARGS=""
+if [ -n "$HTTP_PROXY" ] || [ -n "$http_proxy" ]; then
+    PROXY_VAL=${HTTP_PROXY:-$http_proxy}
+    PROXY_ARGS="$PROXY_ARGS --build-arg HTTP_PROXY=$PROXY_VAL --build-arg http_proxy=$PROXY_VAL"
+fi
+if [ -n "$HTTPS_PROXY" ] || [ -n "$https_proxy" ]; then
+    PROXY_VAL=${HTTPS_PROXY:-$https_proxy}
+    PROXY_ARGS="$PROXY_ARGS --build-arg HTTPS_PROXY=$PROXY_VAL --build-arg https_proxy=$PROXY_VAL"
+fi
+if [ -n "$NO_PROXY" ] || [ -n "$no_proxy" ]; then
+    PROXY_VAL=${NO_PROXY:-$no_proxy}
+    PROXY_ARGS="$PROXY_ARGS --build-arg NO_PROXY=$PROXY_VAL --build-arg no_proxy=$PROXY_VAL"
+fi
+
+if [ -n "$PROXY_ARGS" ]; then
+    echo "Detected proxy settings, using proxy for build..."
+fi
+
 if [ "$MODE" = "local" ]; then
     echo "=== Local Test Build Mode ==="
     # Local test build, build for current platform and load locally
@@ -53,6 +72,7 @@ if [ "$MODE" = "local" ]; then
     docker buildx build --platform $PLATFORM \
       -t palfans/caddy:latest \
       -t palfans/caddy:$VERSION \
+      $PROXY_ARGS \
       --load .
     
     # Extract caddy binary from image
@@ -76,6 +96,7 @@ elif [ "$MODE" = "push" ]; then
     docker buildx build --platform linux/arm64,linux/amd64 \
       -t palfans/caddy:latest \
       -t palfans/caddy:$VERSION \
+      $PROXY_ARGS \
       --push .
     
     # Extract binaries from both platforms
