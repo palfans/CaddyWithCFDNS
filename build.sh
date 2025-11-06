@@ -47,10 +47,26 @@ echo "Starting image build..."
 PROXY_ARGS=""
 if [ -n "$HTTP_PROXY" ] || [ -n "$http_proxy" ]; then
     PROXY_VAL=${HTTP_PROXY:-$http_proxy}
+    
+    # Handle WSL proxy issues - replace host.wsl with host.docker.internal
+    if [[ "$PROXY_VAL" == *"host.wsl"* ]]; then
+        echo "Detected WSL environment, converting host.wsl to host.docker.internal..."
+        PROXY_VAL=$(echo "$PROXY_VAL" | sed 's/host\.wsl/host.docker.internal/g')
+        echo "Updated proxy: $PROXY_VAL"
+    fi
+    
     PROXY_ARGS="$PROXY_ARGS --build-arg HTTP_PROXY=$PROXY_VAL --build-arg http_proxy=$PROXY_VAL"
 fi
 if [ -n "$HTTPS_PROXY" ] || [ -n "$https_proxy" ]; then
     PROXY_VAL=${HTTPS_PROXY:-$https_proxy}
+    
+    # Handle WSL proxy issues - replace host.wsl with host.docker.internal
+    if [[ "$PROXY_VAL" == *"host.wsl"* ]]; then
+        echo "Detected WSL environment, converting host.wsl to host.docker.internal..."
+        PROXY_VAL=$(echo "$PROXY_VAL" | sed 's/host\.wsl/host.docker.internal/g')
+        echo "Updated proxy: $PROXY_VAL"
+    fi
+    
     PROXY_ARGS="$PROXY_ARGS --build-arg HTTPS_PROXY=$PROXY_VAL --build-arg https_proxy=$PROXY_VAL"
 fi
 if [ -n "$NO_PROXY" ] || [ -n "$no_proxy" ]; then
