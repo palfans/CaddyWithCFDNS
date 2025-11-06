@@ -48,10 +48,18 @@ PROXY_ARGS=""
 if [ -n "$HTTP_PROXY" ] || [ -n "$http_proxy" ]; then
     PROXY_VAL=${HTTP_PROXY:-$http_proxy}
     
-    # Handle WSL proxy issues - replace host.wsl with host.docker.internal
+    # Handle WSL proxy issues - replace host.wsl with Docker bridge gateway
     if [[ "$PROXY_VAL" == *"host.wsl"* ]]; then
-        echo "Detected WSL environment, converting host.wsl to host.docker.internal..."
-        PROXY_VAL=$(echo "$PROXY_VAL" | sed 's/host\.wsl/host.docker.internal/g')
+        echo "Detected WSL environment, converting host.wsl to Docker bridge gateway..."
+        # Get Docker bridge gateway IP (usually 172.17.0.1)
+        DOCKER_GATEWAY=$(docker network inspect bridge --format='{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || echo "172.17.0.1")
+        PROXY_VAL=$(echo "$PROXY_VAL" | sed "s/host\.wsl/$DOCKER_GATEWAY/g")
+        echo "Updated proxy: $PROXY_VAL"
+    elif [[ "$PROXY_VAL" == *"host.docker.internal"* ]]; then
+        echo "Converting host.docker.internal to Docker bridge gateway..."
+        # Get Docker bridge gateway IP (usually 172.17.0.1)
+        DOCKER_GATEWAY=$(docker network inspect bridge --format='{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || echo "172.17.0.1")
+        PROXY_VAL=$(echo "$PROXY_VAL" | sed "s/host\.docker\.internal/$DOCKER_GATEWAY/g")
         echo "Updated proxy: $PROXY_VAL"
     fi
     
@@ -60,10 +68,18 @@ fi
 if [ -n "$HTTPS_PROXY" ] || [ -n "$https_proxy" ]; then
     PROXY_VAL=${HTTPS_PROXY:-$https_proxy}
     
-    # Handle WSL proxy issues - replace host.wsl with host.docker.internal
+    # Handle WSL proxy issues - replace host.wsl with Docker bridge gateway
     if [[ "$PROXY_VAL" == *"host.wsl"* ]]; then
-        echo "Detected WSL environment, converting host.wsl to host.docker.internal..."
-        PROXY_VAL=$(echo "$PROXY_VAL" | sed 's/host\.wsl/host.docker.internal/g')
+        echo "Detected WSL environment, converting host.wsl to Docker bridge gateway..."
+        # Get Docker bridge gateway IP (usually 172.17.0.1)
+        DOCKER_GATEWAY=$(docker network inspect bridge --format='{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || echo "172.17.0.1")
+        PROXY_VAL=$(echo "$PROXY_VAL" | sed "s/host\.wsl/$DOCKER_GATEWAY/g")
+        echo "Updated proxy: $PROXY_VAL"
+    elif [[ "$PROXY_VAL" == *"host.docker.internal"* ]]; then
+        echo "Converting host.docker.internal to Docker bridge gateway..."
+        # Get Docker bridge gateway IP (usually 172.17.0.1)
+        DOCKER_GATEWAY=$(docker network inspect bridge --format='{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || echo "172.17.0.1")
+        PROXY_VAL=$(echo "$PROXY_VAL" | sed "s/host\.docker\.internal/$DOCKER_GATEWAY/g")
         echo "Updated proxy: $PROXY_VAL"
     fi
     
